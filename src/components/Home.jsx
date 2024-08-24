@@ -1,115 +1,218 @@
 import { useUnifiedWallet } from "@jup-ag/wallet-adapter";
 import { getExplorerLink } from "@solana-developers/helpers";
 import {
-	burnChecked,
+	createAssociatedTokenAccountInstruction,
+	createBurnCheckedInstruction,
+	createTransferCheckedInstruction,
+	getAssociatedTokenAddress,
 	getMint,
 	getOrCreateAssociatedTokenAccount,
 	getTokenMetadata,
 	TOKEN_2022_PROGRAM_ID,
-	transferChecked,
 } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import NotConnected from "./NotConnected";
 
 export default function Home() {
-	const { publicKey, connected } = useUnifiedWallet();
-	const [mint, setMint] = useState();
-	const [tokenAmount, setTokenAmount] = useState();
-	const [symbol, setSymbol] = useState();
-	const [tokenImage, setTokenImage] = useState();
-	const [recipientAddress, setRecipientAddress] = useState();
-	const [amountToSend, setAmountToSend] = useState();
+	const { publicKey, connected, sendTransaction } = useUnifiedWallet();
+	const [mint, setMint] = useState(null);
+	const [tokenAmount, setTokenAmount] = useState("");
+	const [symbol, setSymbol] = useState("");
+	const [tokenImage, setTokenImage] = useState("");
+	const [recipientAddress, setRecipientAddress] = useState("");
+	const [amountToSend, setAmountToSend] = useState("");
+	const [amountToBurn, setAmountToBurn] = useState("");
 
 	const mintAddress = "CXk2AMBfi3TwaEL2468s6zP8xq9NxTXjp9gjMgzeUynM";
 	const mintPubKey = new PublicKey(mintAddress);
 
 	const connection = new Connection(
-		`https://devnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API}`,
-		"confirmed"
+		"https://api.devnet.solana.com",
+		"finalized"
 	);
+
 	const walletKeypair = new Keypair(
 		new Uint8Array(JSON.parse(import.meta.env.VITE_PYUSD_WALLET))
 	);
 
-	async function transferTokens(
-		e,
-		senderAddress,
-		recipientAddress,
-		amountToSend
-	) {
+	async function transferTokens(e, recipientAddress, amountToSend) {
 		e.preventDefault();
 
-		const senderATA = await getOrCreateAssociatedTokenAccount(
-			connection,
-			walletKeypair,
-			mintPubKey,
-			senderAddress,
-			false,
-			"confirmed",
-			null,
-			TOKEN_2022_PROGRAM_ID
-		);
+		try {
+			if (!publicKey) throw new Error("Please connect your wallet.");
+			if (!recipientAddress) throw new Error("Recipient address is required.");
+			if (!amountToSend) throw new Error("Amount to send is required.");
 
-		const recipientATA = await getOrCreateAssociatedTokenAccount(
-			connection,
-			walletKeypair,
-			mintPubKey,
-			recipientAddress,
-			false,
-			"confirmed",
-			null,
-			TOKEN_2022_PROGRAM_ID
-		);
+			const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-		const sig = await transferChecked(
-			connection,
-			walletKeypair,
-			senderATA.publicKey,
-			mintPubKey,
-			recipientATA.publicKey,
-			senderAddress,
-			amountToSend * 10 ** mint.decimals,
-			mint.decimals,
-			[],
-			null,
-			TOKEN_2022_PROGRAM_ID
-		);
+			let tx = new Transaction({
+				feePayer: publicKey,
+				blockhash,
+				lastValidBlockHeight,
+			});
 
-		console.log(
-			`Tokens transferred: ${getExplorerLink("transaction", sig, "devnet")}`
-		);
+			const senderATA = await getAssociatedTokenAddress(
+				mintPubKey,
+				publicKey,
+				false,
+				TOKEN_2022_PROGRAM_ID
+			);
+
+			const recipientATA = await getAssociatedTokenAddress(
+				mintPubKey,
+				recipientAddress,
+				false,
+				TOKEN_2022_PROGRAM_ID
+			);
+
+			const recipientAccountInfo = await connection.getAccountInfo(
+				recipientATA
+			);
+			if (!recipientAccountInfo) {
+				tx.add(
+					createAssociatedTokenAccountInstruction(
+						publicKey,
+						recipientATA,
+						recipientAddress,
+						mintPubKey,
+						TOKEN_2022_PROGRAM_ID
+					)
+				);
+			}
+
+			tx.add(
+				createTransferCheckedInstruction(
+					senderATA,
+					mintPubKey,
+					recipientATA,
+					publicKey,
+					amountToSend * 10 ** mint.decimals,
+					mint.decimals,
+					[],
+					TOKEN_2022_PROGRAM_ID
+				)
+			);
+
+			const sig = await sendTransaction(tx, connection);
+
+			setTokenAmount((prev) => prev - amountToSend);
+
+			const link = getExplorerLink("tx", sig, "devnet");
+
+			toast.success(
+				<div className="flex flex-col bg-green-100 w-full p-4">
+					<span className="font-semibold">Tokens Transferred</span>
+					<span>
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							className="underline font-bold"
+							href={link}
+						>
+							{link}
+						</a>
+					</span>
+				</div>,
+				{
+					style: {
+						padding: 0,
+						margin: 0,
+					},
+				}
+			);
+		} catch (err) {
+			toast.error(
+				<div className="flex flex-col bg-red-100 w-full p-4">
+					<span className="font-semibold">Transaction Failed</span>
+					<span>{err.message}</span>
+				</div>,
+				{
+					style: {
+						padding: 0,
+						margin: 0,
+					},
+				}
+			);
+		}
 	}
 
-	async function burnTokens(e, burnerAddress, amountToBurn) {
+	async function burnTokens(e, amountToBurn) {
 		e.preventDefault();
 
-		const burnerATA = await getOrCreateAssociatedTokenAccount(
-			connection,
-			walletKeypair,
-			mintPubKey,
-			burnerAddress,
-			false,
-			"confirmed",
-			null,
-			TOKEN_2022_PROGRAM_ID
-		);
+		try {
+			if (!publicKey) throw new Error("Please connect your wallet.");
+			if (!amountToBurn) throw new Error("Amount to burn is required.");
 
-		const sig = await burnChecked(
-			connection,
-			walletKeypair,
-			burnerATA.publicKey,
-			mintPubKey,
-			burnerAddress,
-			amountToBurn * 10 ** mint.decimals,
-			mint.decimals,
-			[],
-			null,
-			TOKEN_2022_PROGRAM_ID
-		);
+			const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-		console.log(
-			`Tokens burned: ${getExplorerLink("transaction", sig, "devnet")}`
-		);
+			const tx = new Transaction({
+				feePayer: publicKey,
+				blockhash,
+				lastValidBlockHeight,
+			});
+
+			const burnerATA = await getAssociatedTokenAddress(
+				mintPubKey,
+				publicKey,
+				false,
+				TOKEN_2022_PROGRAM_ID
+			);
+
+			tx.add(
+				createBurnCheckedInstruction(
+					burnerATA,
+					mintPubKey,
+					publicKey,
+					BigInt(Math.round(amountToBurn * 10 ** mint.decimals)),
+					mint.decimals,
+					[],
+					TOKEN_2022_PROGRAM_ID
+				)
+			);
+
+			const sig = await sendTransaction(tx, connection);
+
+			setTokenAmount((prev) => prev - amountToBurn);
+
+			const link = getExplorerLink("tx", sig, "devnet");
+
+			toast.success(
+				<div className="flex flex-col bg-green-100 w-full p-4">
+					<span className="font-semibold">Tokens Burned</span>
+					<span>
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							className="underline font-bold"
+							href={link}
+						>
+							{link}
+						</a>
+					</span>
+				</div>,
+				{
+					style: {
+						padding: 0,
+						margin: 0,
+					},
+				}
+			);
+		} catch (err) {
+			toast.error(
+				<div className="flex flex-col bg-red-100 w-full p-4">
+					<span className="font-semibold">Transaction Failed</span>
+					<span>{err.message}</span>
+				</div>,
+				{
+					style: {
+						padding: 0,
+						margin: 0,
+					},
+				}
+			);
+		}
 	}
 
 	useEffect(() => {
@@ -158,10 +261,10 @@ export default function Home() {
 		} else {
 			setTokenAmount(null);
 		}
-	}, [publicKey]);
+	}, [publicKey, mint]);
 
 	return (
-		<main>
+		<main className="flex flex-col gap-y-4">
 			{connected ? (
 				<>
 					<section>
@@ -173,56 +276,66 @@ export default function Home() {
 						</div>
 					</section>
 					<form
-						className="flex flex-col"
+						className="flex flex-col gap-y-4"
 						onSubmit={(e) =>
-							transferTokens(e, publicKey, recipientAddress, amountToSend)
+							transferTokens(
+								e,
+								new PublicKey(recipientAddress),
+								Number(amountToSend)
+							)
 						}
 					>
 						<h2 className="text-xl">Transfer to Another Wallet</h2>
-						<label htmlFor="recipientAddress">Recipient Address</label>
-						<input
-							type="text"
-							id="recipientAddress"
-							value={recipientAddress}
-							onChange={(e) => setRecipientAddress(e.target.value)}
-							className="border-2 border-black w-[300px]"
-						/>
-						<label htmlFor="amountSend">Amount to Send</label>
-						<input
-							type="number"
-							id="amountSend"
-							min={0.000001}
-							max={tokenAmount}
-							value={amountToSend}
-							onChange={(e) => setAmountToSend(e.target.value)}
-							className="border-2 border-black w-[300px]"
-						/>
+						<div className="flex flex-col gap-y-2">
+							<label htmlFor="recipientAddress">Recipient Address</label>
+							<input
+								type="text"
+								id="recipientAddress"
+								value={recipientAddress}
+								onChange={(e) => setRecipientAddress(e.target.value)}
+								className="border-2 border-black w-[300px]"
+							/>
+							<label htmlFor="amountSend">Amount to Send</label>
+							<input
+								type="number"
+								id="amountSend"
+								min={0.000001}
+								step={0.000001}
+								max={tokenAmount}
+								value={amountToSend}
+								onChange={(e) => setAmountToSend(e.target.value)}
+								className="border-2 border-black w-[300px]"
+							/>
+						</div>
 						<button type="submit" className="w-fit border-2">
 							Send
 						</button>
 					</form>
 					<form
-						className="flex flex-col"
-						onSubmit={(e) => burnTokens(e, publicKey, amountToBurn)}
+						className="flex flex-col gap-y-4"
+						onSubmit={(e) => burnTokens(e, amountToBurn)}
 					>
 						<h2 className="text-xl">Burn Tokens</h2>
-						<label htmlFor="amountBurn">Amount to Burn</label>
-						<input
-							type="number"
-							id="amountBurn"
-							min={0.000001}
-							max={tokenAmount}
-							value={amountToSend}
-							onChange={(e) => setAmountToSend(e.target.value)}
-							className="border-2 border-black w-[300px]"
-						/>
+						<div className="flex flex-col gap-y-2">
+							<label htmlFor="amountBurn">Amount to Burn</label>
+							<input
+								type="number"
+								id="amountBurn"
+								min={0.000001}
+								step={0.000001}
+								max={tokenAmount}
+								value={amountToBurn}
+								onChange={(e) => setAmountToBurn(e.target.value)}
+								className="border-2 border-black w-[300px]"
+							/>
+						</div>
 						<button type="submit" className="w-fit border-2">
 							Burn
 						</button>
 					</form>
 				</>
 			) : (
-				<p className="text-2xl">Wallet Not Connected</p>
+				<NotConnected	/>
 			)}
 		</main>
 	);

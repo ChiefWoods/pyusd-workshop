@@ -6,6 +6,8 @@ import {
 	SolflareWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { toast, Toaster } from "sonner";
+import { Route, Routes } from "react-router-dom";
+import Layout from "./components/Layout";
 import Home from "./components/Home";
 
 export default function App() {
@@ -118,8 +120,11 @@ export default function App() {
 					],
 				}}
 			>
-				<UnifiedWalletButton />
-				<Home	/>
+				<Routes>
+					<Route path="/" element={<Layout />}>
+						<Route index element={<Home />} />
+					</Route>
+				</Routes>
 			</UnifiedWalletProvider>
 		</>
 	);
