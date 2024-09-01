@@ -1,4 +1,4 @@
-import { useUnifiedWallet } from "@jup-ag/wallet-adapter";
+import { useConnection, useUnifiedWallet } from "@jup-ag/wallet-adapter";
 import { getExplorerLink } from "@solana-developers/helpers";
 import {
 	createAssociatedTokenAccountInstruction,
@@ -10,13 +10,14 @@ import {
 	getTokenMetadata,
 	TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import NotConnected from "./NotConnected";
 
 export default function Home() {
 	const { publicKey, connected, sendTransaction } = useUnifiedWallet();
+	const { connection } = useConnection();
 	const [mint, setMint] = useState(null);
 	const [tokenAmount, setTokenAmount] = useState("");
 	const [symbol, setSymbol] = useState("");
@@ -25,17 +26,12 @@ export default function Home() {
 	const [amountToSend, setAmountToSend] = useState("");
 	const [amountToBurn, setAmountToBurn] = useState("");
 
-	const mintAddress = "CXk2AMBfi3TwaEL2468s6zP8xq9NxTXjp9gjMgzeUynM";
+	const mintAddress = "CXk2AMBfi3TwaEL2468s6zP8xq9NxTXjp9gjMgzeUynM"; // PYUSD devnet address
 	const mintPubKey = new PublicKey(mintAddress);
-
-	const connection = new Connection(
-		"https://api.devnet.solana.com",
-		"finalized"
-	);
 
 	const walletKeypair = new Keypair(
 		new Uint8Array(JSON.parse(import.meta.env.VITE_PYUSD_WALLET))
-	);
+	); // Used for creating associated token accounts
 
 	async function transferTokens(e, recipientAddress, amountToSend) {
 		e.preventDefault();
