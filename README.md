@@ -1,70 +1,54 @@
-# PYUSD Workshop
+# React + TypeScript + Vite
 
-Stablecoin demo dApp developed for Superteam Malaysia.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-[Source Repository](https://github.com/ChiefWoods/pyusd-workshop)
+Currently, two official plugins are available:
 
-## Built With
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### Languages
+## Expanding the ESLint configuration
 
-- [![React](https://img.shields.io/badge/React-23272f?style=for-the-badge&logo=react)](https://react.dev/)
-- [![React Router](https://img.shields.io/badge/ReactRouter-ffffff?style=for-the-badge&logo=react-router)](https://reactrouter.com/)
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-### Libraries
-
-- [Solana JavaScript SDK](https://solana-labs.github.io/solana-web3.js/)
-- [Solana SPL Token](https://solana-labs.github.io/solana-program-library/token/js/index.html)
-- [Unified Wallet Adapter](https://unified.jup.ag/)
-
-### Tools
-
-- [Visual Studio Code](https://code.visualstudio.com/)
-
-## Getting Started
-
-### Prerequisites
-
-1. Update your Solana CLI and npm package to the latest version
-
-```
-solana-install update
-```
-
-```
-npm install npm@latest -g
+```js
+export default tseslint.config({
+  extends: [
+    // Remove ...tseslint.configs.recommended and replace with this
+    ...tseslint.configs.recommendedTypeChecked,
+    // Alternatively, use this for stricter rules
+    ...tseslint.configs.strictTypeChecked,
+    // Optionally, add this for stylistic rules
+    ...tseslint.configs.stylisticTypeChecked,
+  ],
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
 
-### Setup
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-1. Clone the repository
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
+export default tseslint.config({
+  plugins: {
+    // Add the react-x and react-dom plugins
+    'react-x': reactX,
+    'react-dom': reactDom,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended typescript rules
+    ...reactX.configs['recommended-typescript'].rules,
+    ...reactDom.configs.recommended.rules,
+  },
+})
 ```
-git clone https://github.com/ChiefWoods/pyusd-workshop.git
-```
-
-2. Install all dependencies
-
-```
-npm install
-```
-
-3. Start development server
-
-```
-npm run dev
-```
-
-## Issues
-
-View the [open issues](https://github.com/ChiefWoods/pyusd-workshop/issues) for a full list of proposed features and known bugs.
-
-## Acknowledgements
-
-### Resources
-
-- [Shields.io](https://shields.io/)
-
-## Contact
-
-[chii.yuen@hotmail.com](mailto:chii.yuen@hotmail.com)
