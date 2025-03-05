@@ -1,1 +1,2 @@
 bunx lint-staged
+find . -name "*:Zone.Identifier" -type f -delete
