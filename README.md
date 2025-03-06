@@ -1,54 +1,72 @@
-# React + TypeScript + Vite
+# PYUSD Workshop
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Stablecoin dApp developed for Monash Hackfest 2024.
 
-Currently, two official plugins are available:
+[Source Repository](https://github.com/ChiefWoods/pyusd-workshop)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Built With
 
-## Expanding the ESLint configuration
+### Languages
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [![TypeScript](https://img.shields.io/badge/TypeScript-ffffff?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+- [![React](https://img.shields.io/badge/React-23272f?style=for-the-badge&logo=react)](https://react.dev/)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### Libraries
+
+- [@jup-ag/wallet-adapter](https://unified.jup.ag/)
+- [@solana/web3.js](https://solana-labs.github.io/solana-web3.js/)
+- [@solana/spl-token](https://solana-labs.github.io/solana-program-library/token/js/)
+- [@solana/wallet-adapter-wallets](https://github.com/anza-xyz/wallet-adapter)
+- [@solana-developers/helpers](https://github.com/solana-developers/helpers)
+- [react-router](https://reactrouter.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Zod](https://zod.dev/)
+
+### Runtime
+
+- [![Bun](https://img.shields.io/badge/Bun-000?style=for-the-badge&logo=bun)](https://bun.sh/)
+
+## Getting Started
+
+### Prerequisites
+
+Update your Solana CLI, Bun toolkit to the latest version
+
+```bash
+solana-install update
+bun upgrade
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Clone the repository
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+git clone https://github.com/ChiefWoods/pyusd-workshop.git
 ```
+
+2. Install all dependencies
+
+```bash
+bun install
+```
+
+3. Start development server
+
+```bash
+bun run dev
+```
+
+## Issues
+
+View the [open issues](https://github.com/ChiefWoods/pyusd-workshop/issues) for a full list of proposed features and known bugs.
+
+## Acknowledgements
+
+### Resources
+
+- [Shields.io](https://shields.io/)
+
+## Contact
+
+[chii.yuen@hotmail.com](mailto:chii.yuen@hotmail.com)
