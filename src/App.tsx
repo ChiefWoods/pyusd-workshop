@@ -1,5 +1,8 @@
 import { useConnection, useUnifiedWallet } from "@jup-ag/wallet-adapter";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  AccountLayout,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import BurnForm from "./components/BurnForm";
 import { useEffect, useState } from "react";
 import { PYUSD_MINT } from "./constants";
@@ -38,6 +41,19 @@ export default function App() {
       setIsLoading(false);
     })();
   }, [publicKey, connection]);
+
+  useEffect(() => {
+    if (ata) {
+      const subscriptionId = connection.onAccountChange(ata, (info) => {
+        const acc = AccountLayout.decode(info.data);
+        setPyusdBal(Number(acc.amount) / 10 ** PYUSD_MINT.decimals);
+      });
+
+      return () => {
+        connection.removeAccountChangeListener(subscriptionId);
+      };
+    }
+  }, [ata, connection]);
 
   return (
     <section className="flex flex-col gap-6">
