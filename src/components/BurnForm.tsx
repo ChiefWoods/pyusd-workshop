@@ -100,7 +100,13 @@ export default function BurnForm({
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-semibold">{label}</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel className="font-semibold">{label}</FormLabel>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs">Max: {maxAmount}</p>
+                  <img src="pyusd.svg" className="size-5" />
+                </div>
+              </div>
               <FormControl>
                 <Input
                   type="number"
