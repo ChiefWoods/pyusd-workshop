@@ -7,7 +7,7 @@ import TransferForm from "./components/TransferForm";
 import { PublicKey } from "@solana/web3.js";
 
 export default function App() {
-  const { publicKey } = useUnifiedWallet();
+  const { publicKey, connected, connecting } = useUnifiedWallet();
   const { connection } = useConnection();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [ata, setAta] = useState<PublicKey | null>(null);
@@ -41,8 +41,12 @@ export default function App() {
 
   return (
     <section className="flex flex-col gap-6">
-      {!publicKey ? (
-        <p>Connect your wallet</p>
+      {!connected ? (
+        connecting ? (
+          <p>Connecting...</p>
+        ) : (
+          <p>Connect your wallet</p>
+        )
       ) : isLoading ? (
         <p>Loading...</p>
       ) : (
