@@ -1,4 +1,3 @@
-import { useWrappedReownAdapter } from "@jup-ag/jup-mobile-adapter";
 import {
   Adapter,
   ConnectionProvider,
@@ -14,32 +13,11 @@ import { ReactNode, useMemo } from "react";
 import { toast } from "sonner";
 
 export default function SolanaProvider({ children }: { children: ReactNode }) {
-  const { reownAdapter, jupiterAdapter } = useWrappedReownAdapter({
-    appKitOptions: {
-      metadata: {
-        name: "Jupiter",
-        description: `Jupiter is one of the largest decentralized trading platform and one of the most active governance community in crypto. We're building the everything exchange for everyone.`,
-        url: "https://jup.ag",
-        icons: ["https://jup.ag/svg/jupiter-logo.png"],
-      },
-      projectId: "pyusd-workshop",
-      features: {
-        analytics: false,
-        socials: ["google", "x", "apple"],
-        email: false,
-      },
-      enableWallets: false,
-    },
-  });
-
   const wallets: Adapter[] = useMemo(() => {
-    return [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-      reownAdapter,
-      jupiterAdapter,
-    ].filter((item) => item && item.name && item.icon) as Adapter[];
-  }, [reownAdapter, jupiterAdapter]);
+    return [new PhantomWalletAdapter(), new SolflareWalletAdapter()].filter(
+      (item) => item && item.name && item.icon,
+    ) as Adapter[];
+  }, []);
 
   return (
     <ConnectionProvider endpoint={clusterApiUrl("devnet")}>
